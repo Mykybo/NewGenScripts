@@ -109,7 +109,7 @@ function Evade:cloneSpellCastInfo(spell)
 end
 
 function Evade:OnUpdate()
-  if (self.SpellObjectList ~= nil) then
+  if (not myHero.isDead and self.SpellObjectList ~= nil) then
     self:Evade()
   end
 end
@@ -376,7 +376,7 @@ function Evade:EvadeLine(skillshot)
   heroV = Vector(myHero.position.x, 0, myHero.position.z)
   dodgePos = (onLine - (onLine - heroV):Normalized() * (radius + myHero.boundingRadius))
   dodgePos2 = (onLine - (onLine - heroV):Normalized() * (radius + myHero.boundingRadius + 20))
-  dodgeX, dodgeZ = dodgePos.x, dodgePos.z
+  dodgeX, dodgeZ = floor(dodgePos.x), floor(dodgePos.z)
   -- if perpendicular < radius and calc1 < calc4 and calc2 < calc4 then
   if (abs((onLine - heroV):Len()) < abs((onLine - dodgePos2):Len())) then
     print('dodgeX '..dodgeX..' dodgeZ '..dodgeZ)
