@@ -109,7 +109,7 @@ function Evade:cloneSpellCastInfo(spell)
 end
 
 function Evade:OnUpdate()
-  if (not myHero.isDead and self.SpellObjectList ~= nil) then
+  if (not myHero.isDead and self.SpellObjectList) then
     self:Evade()
   end
 end
@@ -118,7 +118,7 @@ function Evade:OnDraw()
   if self.BlockMovement then
     DrawHandler:Circle3D(self.lastOrderPos:ToDX3(), 50, 0xFFFFFFFF)
   end
-  if (self.SpellObjectList ~= nil) then
+  if (self.SpellObjectList) then
     self:DrawSpells()
   end
 end
@@ -141,7 +141,7 @@ function Evade:OnCreateObject(object, networkId)
   end
   print('name: '..object.name..' type: '..object.type)
   local spellInfo, spellName = self:GetSpellInfo(object.name)
-  if (spellInfo ~= nil and spellName ~= nil) then
+  if (spellInfo and spellName) then
     if (self.SpellObjectList[spellName] == nil or self.SpellObjectList[spellName].spell == nil) then
       self.SpellObjectList[spellName] = {}
       self.SpellObjectList[spellName].allAdded = false
@@ -162,7 +162,7 @@ function Evade:OnProcessSpell(unit, spell)
     if (spell.spellData and spell.spellData.name and spell.spellData.spellDataInfo) and (unit.team ~= myHero.team or self.drawFriendlySpells) then
       print("SPELL: "..spell.spellData.name)
       local spellInfo, spellName = self:GetSpellInfo(spell.spellData.name)
-      if (spellInfo ~= nil and spellName ~= nil) then
+      if (spellInfo and spellName) then
         if (self.SpellObjectList[spellName] == nil or self.SpellObjectList[spellName].object == nil) then
           self.SpellObjectList[spellName] = {}
           self.SpellObjectList[spellName].allAdded = false
@@ -232,7 +232,7 @@ function Evade:DrawSpells()
     if (o.allAdded and (o.object == nil or not o.object.isValid or (not string.match(o.object.name, name) and o.object.name ~= o.spellInfo.particleName))) then
       self.SpellObjectList[name] = nil
       print('REMOVED '..name)
-    elseif (o.object ~= nil) then
+    elseif (o.object) then
       -- Draw the particle
       DrawHandler:Circle3D(o.object.position, o.spellInfo.radius, 0xFFFFFFFF)
       -- Draw spell path
@@ -242,7 +242,7 @@ function Evade:DrawSpells()
         -- DrawHandler:Circle3D(o.object.position, o.spellInfo.radius, 0xFFFFFFFF)
       --   -- print("Drawing CIRC skillshot: "..name)
       elseif (o.spellInfo.type == "linear") then
-        if (o.spell ~= nil) then
+        if (o.spell) then
           -- highlights start & end pos
           -- DrawHandler:Circle3D(o.spell.startPos, o.spellInfo.radius, 0xFFFFFFFF) -- 0xff0000
           -- DrawHandler:Circle3D(o.spell.endPos, o.spellInfo.radius, 0xFFFFFFFF) -- 0xff0000
@@ -416,7 +416,7 @@ end
 
 function Evade:UseDash(dodgePos)
   ability = DashList[myHero.charName]
-  if (ability ~= nil and IsReady(ability)) then
+  if (ability and IsReady(ability)) then
     CastSpell(ability, dodgePos)
   end
 end
