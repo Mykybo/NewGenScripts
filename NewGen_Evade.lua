@@ -5,11 +5,7 @@
 require 'utils'
 require 'Vector'
 require 'NewGen_EvadeConfig'
-
--- print('-----------------')
--- print(io.popen"cd":read'*l')
--- print('-----------------')
--- local send = require 'sendinputscheduled'
+require 'FF15menu'
 
 local lengthOf, huge, pi,  floor, ceil, sqrt, max, min = math.lengthOf, math.huge, math.pi, math.floor, math.ceil, math.sqrt, math.max, math.min
 local abs, deg, acos, atan = math.abs, math.deg, math.acos, math.atan
@@ -19,24 +15,6 @@ local TEAM_JUNGLE = 300
 local TEAM_ALLY = myHero.team
 local TEAM_ENEMY = TEAM_JUNGLE - TEAM_ALLY
 local Q,W,E,R = SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R
-
--- local function clone(o, seen)
---   seen = seen or {}
---   if o == nil then return nil end
---   if seen[o] then return seen[o] end
---   local no
---   if type(o) == 'table' or type(o) == 'userdata' then
---     no = {}
---     seen[o] = no
---     for k, v in pairs(o) do
---       no[clone(k, seen)] = clone(v, seen)
---     end
---     setmetatable(no, clone(getmetatable(o), seen))
---   else -- number, string, boolean, etc
---     no = o
---   end
---   return no
--- end
 
 local function class()
   local cls = {}
@@ -59,9 +37,6 @@ end
 function Evade:__init()
   print('== LOADING EVADE ==')
   PrintChat("-- INITIALIZING EVADE --")
-  -- AddEvent(Events.OnBasicAttack, function(...) self:OnProcessAutoAttack(...) end)
-  -- AddEvent(Events.OnStopCastSpell, function(...) self:OnStopCast(...) end)
-  -- AddEvent(Events.OnDeleteObject, function(...) self:OnDeleteObject(...) end)
   AddEvent(Events.OnProcessSpell, function(...) self:OnProcessSpell(...) end)
   AddEvent(Events.OnCreateObject, function(...) self:OnCreateObject(...) end)
   AddEvent(Events.OnIssueOrder, function(...) return self:OnIssueOrder(...) end)
@@ -79,8 +54,22 @@ function Evade:__init()
   if self.drawFriendlySpells then
     self:LoadSpells(ObjectManager:GetAllyHeroes())
   end
+
+  self:Menu()
+
   PrintChat("<font color=\"#66CCCC\"><b>NewGen Evade</b></font><b><font color=\"#FFFFFF\"> Loaded!</font>")
   print('== LOADED ==')
+end
+
+function Evade:Menu()
+  menu = Menu("NewGenEvade", "NewGen Evade")
+  menu:checkbox("enabled", "Enabled", true)
+  menu:checkbox("useDash", "Use dash", true)
+  menu:sub("enabledSpells", "Spells to evade")
+  ----------
+  for name, spell in pairs(self.SpellList) do
+    menu.enabledSpells:checkbox(name, name, true)
+  end
 end
 
 function Evade:LoadSpells(heroes)
@@ -109,7 +98,7 @@ function Evade:cloneSpellCastInfo(spell)
 end
 
 function Evade:OnUpdate()
-  if (not myHero.isDead and self.SpellObjectList) then
+  if (menu.enabled:get() and not myHero.isDead and self.SpellObjectList) then
     self:Evade()
   end
 end
@@ -139,7 +128,7 @@ function Evade:OnCreateObject(object, networkId)
       string.match(object.name, "SRU") or string.match(object.name, "BasicAttack") or string.match(object.name, "Item")) then
     return
   end
-  print('name: '..object.name..' type: '..object.type)
+  -- print('name: '..object.name..' type: '..object.type)
   local spellInfo, spellName = self:GetSpellInfo(object.name)
   if (spellInfo and spellName) then
     if (self.SpellObjectList[spellName] == nil or self.SpellObjectList[spellName].spell == nil) then
@@ -153,7 +142,7 @@ function Evade:OnCreateObject(object, networkId)
     self.SpellObjectList[spellName].object = object
     self.SpellObjectList[spellName].spellInfo = spellInfo
     self.SpellObjectList[spellName].objectAdded = true
-    print("-- INSERTED OBJECT: "..spellName)
+    -- print("-- INSERTED OBJECT: "..spellName)
   end
 end
 
@@ -173,16 +162,22 @@ function Evade:OnProcessSpell(unit, spell)
         end
         self.SpellObjectList[spellName].spell = self:cloneSpellCastInfo(spell)
         self.SpellObjectList[spellName].spellInfo = spellInfo
-        self.SpellObjectList[spellName].evade = unit.team ~= myHero.team
+        self.SpellObjectList[spellName].evade = (unit.team ~= myHero.team and self:isEnabled(spellName))
         self.SpellObjectList[spellName].spellAdded = true
-        print("-- INSERTED SPELL: "..spellName)
+        -- print("-- INSERTED SPELL: "..spellName)
         -- fix end pos (currently it's on mouse location)
         local startP = Vector(spell.startPos.x, spell.startPos.y, spell.startPos.z)
         local endP = Vector(spell.endPos.x, spell.endPos.y, spell.endPos.z)
-        self.SpellObjectList[spellName].spell.endPos = (startP - (startP - endP):Normalized() * (spellInfo.range + spellInfo.radius)):ToDX3()
+        if spellInfo.radius then
+          self.SpellObjectList[spellName].spell.endPos = (startP - (startP - endP):Normalized() * (spellInfo.range + spellInfo.radius)):ToDX3()
+        end
       end
     end
   end
+end
+
+function Evade:isEnabled(spellName)
+  return menu.enabledSpells[spellName]:get()
 end
 
 function Evade:GetSpellInfo(spellName)
@@ -238,14 +233,9 @@ function Evade:DrawSpells()
       -- Draw spell path
       if (o.spellInfo.type == "circular") then
         if (o.spell == nil) then return end
-        -- DrawHandler:Circle3D(o.spell.endPos, o.spellInfo.radius, 0xFFFFFFFF)
-        -- DrawHandler:Circle3D(o.object.position, o.spellInfo.radius, 0xFFFFFFFF)
-      --   -- print("Drawing CIRC skillshot: "..name)
+        -- TODO (?)
       elseif (o.spellInfo.type == "linear") then
-        if (o.spell) then
-          -- highlights start & end pos
-          -- DrawHandler:Circle3D(o.spell.startPos, o.spellInfo.radius, 0xFFFFFFFF) -- 0xff0000
-          -- DrawHandler:Circle3D(o.spell.endPos, o.spellInfo.radius, 0xFFFFFFFF) -- 0xff0000
+        if o.spell and o.spell.endPos then
           screenStart = Renderer:WorldToScreen(D3DXVECTOR3(o.object.position.x, 0, o.object.position.z))
           screenEnd = Renderer:WorldToScreen(D3DXVECTOR3(o.spell.endPos.x, 0, o.spell.endPos.z))
           DrawRect(screenStart, screenEnd, o.spellInfo.radius)
@@ -257,18 +247,12 @@ end
 
 -- EVASION functs
 function Evade:isValid(o)
-    if (o == nil or (o.allAdded and (o.object == nil or not o.object.isValid))) then
-    print("NOT VALID: "..o.spellInfo.name)
+  if (o == nil or (o.allAdded and (o.object == nil or not o.object.isValid))) then
+    -- print("NOT VALID: "..o.spellInfo.name)
     return false
   end
   return true
 end
-
--- winapi was not loading for some reason
--- function Evade:BlockMovement()
---   send.block_input(self.BlockMovement) -- 800 - useless
---   send.tick()
--- end
 
 function Evade:Evade()
   self.BlockMovement = false
@@ -276,7 +260,6 @@ function Evade:Evade()
     -- check validity
     if (skillshot.timeToLive and skillshot.timeToLive < GetTickCount()) then
       self.SpellObjectList[name] = nil
-      -- self:BlockMovement()
       print("Removed! - timed out "..name)
       -- print('skillshot.timeToLive '..skillshot.timeToLive..' GetTickCount() '..GetTickCount())
       return
@@ -285,22 +268,21 @@ function Evade:Evade()
       return
     end
     if (not skillshot.spellAdded or not skillshot.spell) then
-      print('SPELL NOT ADDED '..name)
+      -- print('SPELL NOT ADDED '..name)
       return
     end
     if (not self:isValid(skillshot)) then
       self.SpellObjectList[name] = nil
-      -- self:BlockMovement()
-      print("Removed! - not valid")
+      -- print("Removed! - not valid")
       return
     end
     if (GetDistance(skillshot.spell.startPos) > skillshot.spellInfo.range) then
-      print('SKILLSHOT out of RANGE '..name)
+      -- print('SKILLSHOT out of RANGE '..name)
       return
     end
     -- XXX: use: skillshot.spell.startPos
     if (skillshot.objectAdded and (skillshot.spell == nil or GetDistance(skillshot.spell.startPos) < GetDistance(skillshot.object, skillshot.spell.startPos))) then
-      print("Skillshot HAS PASSED: "..name)
+      -- print("Skillshot HAS PASSED: "..name)
       return
     end
     -- begin evasion
@@ -324,69 +306,23 @@ function getSpPoint(A,B,C)
 end
 
 function Evade:EvadeLine(skillshot)
-  -- startPos = skillshot.startPos
   startPos = skillshot.spell.startPos
   endPos = skillshot.spell.endPos
   radius = skillshot.spellInfo.radius
   range = skillshot.spellInfo.range
-  -- tempX = startPos.x + (range) / (floor(sqrt((startPos.x - endPos.x)^2 + (startPos.z - endPos.z)^2)))*(endPos.x - startPos.x)
-  -- tempZ = startPos.z + (range) / (floor(sqrt((startPos.x - endPos.x)^2 + (startPos.z - endPos.z)^2)))*(endPos.z - startPos.z)
-
-  -- calc1 = (floor(sqrt((endPos.x - myHero.position.x)^2 + (endPos.z - myHero.position.z)^2)))
-  -- calc2 = (floor(sqrt((startPos.x - myHero.position.x)^2 + (startPos.z - myHero.position.z)^2)))
-  -- calc4 = (floor(sqrt((startPos.x - endPos.x)^2 + (startPos.z - endPos.z)^2)))
-  -- perpendicular = (floor((abs((endPos.x - startPos.x) * (startPos.z - myHero.position.z) - (startPos.x - myHero.position.x) * (endPos.z - startPos.z))) / (sqrt((endPos.x - startPos.x)^2 + (endPos.z - startPos.z)^2))))
-  -- k = ((endPos.z - startPos.z) * (myHero.position.x - startPos.x) - (endPos.x - startPos.x) * (myHero.position.z - startPos.z)) / ((endPos.z - startPos.z)^2 + (endPos.x - startPos.x)^2)
-  -- x4 = myHero.position.x - k * (endPos.z - startPos.z)
-  -- z4 = myHero.position.z + k * (endPos.x - startPos.x)
-  -- calc3 = sqrt((x4 - myHero.position.x)^2 + (z4 - myHero.position.z)^2) -- (floor
-  -- if (calc3 == 0) then
-  --   print('   startPos x '..startPos.x.. ' y '..startPos.y..' z '..startPos.z)
-  --   print('   endPos x '..endPos.x.. ' y '..endPos.y..' z '..endPos.z)
-  --   print('   myHero.position x '..myHero.position.x.. ' y '..myHero.position.y..' z '..myHero.position.z)
-  --   print('   radius '..radius)
-  --   print('   range '..range)
-  --   print('   k '..k)
-  --   print('   x4 '..x4)
-  --   print('   z4 '..z4)
-  --   return
-
-  -- dodgeX -inf dodgeZ inf
-  --  startPos x 12716 y 51.729400634766 z 5212
-  --  endPos x 11578.04296875 y 51.729400634766 z 4745.1450195313
-  --  myHero.position x 12358 y 51.729400634766 z 5066
-  --  radius 80
-  --  range 1150
-  --  tempX 11652.056640625
-  --  tempZ 4775.509765625
-
-  -- startPos x 13508.93359375 y 52.300567626953 z 4588.3784179688
-  --  endPos x 12976.634765625 y 50.851345062256 z 3479.5251464844
-  --  myHero.position x 13166 y 51.366905212402 z 3874
-  --  radius 80
-  --  range 1150
-  --  k 1.6524580814803e-07
-  --  x4 13166
-  --  z4 3874
-  -- end
   x4, z4 = getSpPoint(startPos, endPos, myHero.position)
   onLine = Vector(x4, 0, z4)
-  -- dodgeX = x4 + ((radius + myHero.boundingRadius / 2) / calc3) * (myHero.position.x - x4)
-  -- dodgeZ = z4 + ((radius + myHero.boundingRadius / 2) / calc3) * (myHero.position.z - z4)
   heroV = Vector(myHero.position.x, 0, myHero.position.z)
   dodgePos = (onLine - (onLine - heroV):Normalized() * (radius + myHero.boundingRadius))
-  dodgePos2 = (onLine - (onLine - heroV):Normalized() * (radius + myHero.boundingRadius + 20))
-  dodgeX, dodgeZ = floor(dodgePos.x), floor(dodgePos.z)
-  -- if perpendicular < radius and calc1 < calc4 and calc2 < calc4 then
-  if (abs((onLine - heroV):Len()) < abs((onLine - dodgePos2):Len())) then
-    print('dodgeX '..dodgeX..' dodgeZ '..dodgeZ)
+  if (abs((onLine - heroV):Len()) < abs((onLine - dodgePos):Len()) and heroV:DistanceTo(dodgePos) > 2) then
     self.BlockMovement = true
-    self.lastOrderPos = Vector(dodgeX, 0, dodgeZ)
-    MoveToVec(D3DXVECTOR3(dodgeX, 0, dodgeZ))
+    self.lastOrderPos = dodgePos
+    MoveToVec(dodgePos:ToDX3())
     -- TODO: make this optional through menu
-  self:DashEvadeTo(dodgeX, dodgeZ)
+    if menu.useDash:get() then
+      self:DashEvadeTo(dodgeX, dodgeZ)
+    end
   end
-  -- self:BlockMovement()
 end
 
 function Evade:EvadeCirc(skillshot)
@@ -401,10 +337,10 @@ function Evade:EvadeCirc(skillshot)
     self.BlockMovement = true
     self.lastOrderPos = Vector(dodgeX, 0, dodgeZ)
     MoveToVec(D3DXVECTOR3(dodgeX, 0, dodgeZ))
-    -- TODO: make this optional through menu
-    self:DashEvadeTo(dodgeX, dodgeZ)
+    if menu.useDash:get() then
+      self:DashEvadeTo(dodgeX, dodgeZ)
+    end
   end
-  -- self:BlockMovement()
 end
 
 function Evade:DashEvadeTo(x, z)
