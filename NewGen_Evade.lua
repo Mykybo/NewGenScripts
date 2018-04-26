@@ -5,7 +5,7 @@
 require 'utils'
 require 'Vector'
 require 'NewGen_EvadeConfig'
-require 'FF15menu'
+require 'FF15Menu'
 
 local lengthOf, huge, pi,  floor, ceil, sqrt, max, min = math.lengthOf, math.huge, math.pi, math.floor, math.ceil, math.sqrt, math.max, math.min
 local abs, deg, acos, atan = math.abs, math.deg, math.acos, math.atan
