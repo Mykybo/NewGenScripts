@@ -1,6 +1,7 @@
 # NewGenScripts
 
-* Ofuscation: `E:\HACKING\LOL\LUA\XFuscator>lua XFuscator.lua test.lua -noloadstring -nostep2 -uglify -fluff`
+* Ofuscation: `lua XFuscator.lua test.lua -noloadstring -nostep2 -uglify -fluff`
+* build the result into a binary `luac -s obf.lua `
 
 Dependencies:
 
