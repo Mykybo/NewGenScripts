@@ -1,11 +1,23 @@
-# NewGenScripts
+# NewGen_Scripts
 
-* Ofuscation: `lua XFuscator.lua test.lua -noloadstring -nostep2 -uglify -fluff`
-* build the result into a binary `luac -s obf.lua `
+## EVADE
 
-Dependencies:
+* see common/NewGen_EvadeConfig
+
+### Dependencies
 
 * Vector
 * utils
 * NewGen_EvadeConfig
 * FF15menu
+
+## OBFUSCATOR
+
+* go to the obfuscator dir
+* run `./obfuscate.sh <path_to_script>`
+* it will create an obfuscated & compiled file called `<script_name>-obf.lua`
+
+### Dependencies:
+
+* Lua
+* LuaJIT
