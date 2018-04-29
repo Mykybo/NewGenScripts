@@ -67,8 +67,13 @@ function Evade:Menu()
   menu:checkbox("useDash", "Use dash", true)
   menu:sub("enabledSpells", "Spells to evade")
   ----------
-  for name, spell in pairs(self.SpellList) do
-    menu.enabledSpells:checkbox(name, name, true)
+
+  for k, hero in pairs(ObjectManager:GetEnemyHeroes()) do
+    for name, spell in pairs(self.SpellList) do
+      if hero.charName == spell.charName then
+        menu.enabledSpells:checkbox(name, name, true)
+      end
+    end
   end
 end
 
@@ -76,7 +81,6 @@ function Evade:LoadSpells(heroes)
   for k, hero in pairs(heroes) do
     for name, Spell in pairs(SkillShotDatabase) do
       if Spell.charName == hero.charName then -- mb should be charName?
-        -- table.insert(self.SpellList, Spell)
         self.SpellList[name] = Spell
         print("Added "..name)
       end
