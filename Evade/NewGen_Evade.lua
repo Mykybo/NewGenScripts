@@ -292,7 +292,7 @@ function Evade:Evade()
     if (skillshot.spellInfo.type == "linear") then
       self:EvadeLine(skillshot)
     elseif (skillshot.spellInfo.type == "circular") then
-      self:EvadeCirc(skillshot)
+      -- self:EvadeCirc(skillshot)
     end
   end
 end

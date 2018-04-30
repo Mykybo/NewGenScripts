@@ -17,7 +17,7 @@ DashList = {
   ["Tryndamere"] = E,
 }
 
-Spells = {
+SkillShotDatabase = {
   ["AatroxQ"]={charName="Aatrox",slot=_Q,type="circular",speed=450,range=650,delay=0.25,radius=275,hitbox=true,aoe=true,cc=true,collision=false},
   ["AatroxE"]={charName="Aatrox",slot=_E,type="triangular",speed=1250,range=1000,delay=0.25,radius1=150,radius2=0,hitbox=true,aoe=true,cc=true,collision=false},
   ["AhriOrbofDeception"]={charName="Ahri",slot=_Q,type="linear",speed=2500,range=880,delay=0.25,radius=100,hitbox=true,aoe=true,cc=false,collision=false},
