@@ -62,16 +62,15 @@ function Evade:__init()
 end
 
 function Evade:Menu()
-  menu = Menu("NewGenEvade", "NewGen Evade")
-  menu:checkbox("enabled", "Enabled", true)
-  menu:checkbox("useDash", "Use dash", true)
-  menu:sub("enabledSpells", "Spells to evade")
+  self.menu = Menu("NewGenEvade", "NewGen Evade")
+  self.menu:checkbox("enabled", "Enabled", true)
+  self.menu:checkbox("useDash", "Use dash", true)
+  self.menu:sub("enabledSpells", "Spells to evade")
   ----------
-
   for k, hero in pairs(ObjectManager:GetEnemyHeroes()) do
     for name, spell in pairs(self.SpellList) do
       if hero.charName == spell.charName then
-        menu.enabledSpells:checkbox(name, name, true)
+        self.menu.enabledSpells:checkbox(name, name, true)
       end
     end
   end
@@ -102,7 +101,7 @@ function Evade:cloneSpellCastInfo(spell)
 end
 
 function Evade:OnUpdate()
-  if (menu.enabled:get() and not myHero.isDead and self.SpellObjectList) then
+  if (self.menu.enabled:get() and not myHero.isDead and self.SpellObjectList) then
     self:Evade()
   end
 end
@@ -181,7 +180,7 @@ function Evade:OnProcessSpell(unit, spell)
 end
 
 function Evade:isEnabled(spellName)
-  return menu.enabledSpells[spellName]:get()
+  return self.menu.enabledSpells[spellName]:get()
 end
 
 function Evade:GetSpellInfo(spellName)
@@ -322,7 +321,7 @@ function Evade:EvadeLine(skillshot)
     self.BlockMovement = true
     self.lastOrderPos = dodgePos
     MoveToVec(dodgePos:ToDX3())
-    if menu.useDash:get() then
+    if self.menu.useDash:get() then
       self:DashEvadeTo(dodgeX, dodgeZ)
     end
   end
@@ -340,7 +339,7 @@ function Evade:EvadeCirc(skillshot)
     self.BlockMovement = true
     self.lastOrderPos = Vector(dodgeX, 0, dodgeZ)
     MoveToVec(D3DXVECTOR3(dodgeX, 0, dodgeZ))
-    if menu.useDash:get() then
+    if self.menu.useDash:get() then
       self:DashEvadeTo(dodgeX, dodgeZ)
     end
   end
