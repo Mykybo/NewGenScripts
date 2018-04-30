@@ -322,7 +322,6 @@ function Evade:EvadeLine(skillshot)
     self.BlockMovement = true
     self.lastOrderPos = dodgePos
     MoveToVec(dodgePos:ToDX3())
-    -- TODO: make this optional through menu
     if menu.useDash:get() then
       self:DashEvadeTo(dodgeX, dodgeZ)
     end
